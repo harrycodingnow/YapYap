@@ -1,29 +1,42 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+// app/_layout.tsx
+import { Slot } from 'expo-router';
+import { DarkModeProvider } from '@/contexts/DarkModeContext';
+import { LocationProvider } from '@/contexts/LocationContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import '../contexts/i18n';
+import { useEffect, useState } from 'react';
+import { getSavedLanguage } from '../contexts/i18n';
+import i18n from '../contexts/i18n';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const [langReady, setLangReady] = useState(false);
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
+  useEffect(() => {
+    (async () => {
+      const saved = await getSavedLanguage();
+      if (saved && saved !== i18n.language) {
+        await i18n.changeLanguage(saved);
+      }
+      setLangReady(true);
+    })();
+  }, []);
+
+  if (!langReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#FDBA74" />
+      </View>
+    );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AuthProvider>
+      <DarkModeProvider>
+        <LocationProvider>
+          <Slot />
+        </LocationProvider>
+      </DarkModeProvider>
+    </AuthProvider>
   );
 }
