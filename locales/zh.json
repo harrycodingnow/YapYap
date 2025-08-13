@@ -22,6 +22,7 @@
   "profile.resetError": "重設時發生錯誤。",
   "profile.sendFeedback": "傳送回饋",
   "profile.loading": "正在載入你的資料...",
+  "profile.about": "關於",
 
   "feed.title": "Yapyap",
   "feed.subtitle": "5 公里內發生了什麼事",
@@ -55,5 +56,18 @@
   "welcome.bullet2": "24 小時後將自動消失（即將上線！）",
   "welcome.bullet3": "保持輕鬆、匿名與尊重的態度。",
   "welcome.footer": "準備好了嗎？開始 yap 吧。",
-  "welcome.button": "我知道了！"
+  "welcome.button": "我知道了！",
+
+  "about.title": "關於啦",
+  "about.appInfo": "名字:Yapyap",
+  "about.appDescription": "這是一個可以匿名發言的社群平台，讓你在地圖上的某個角落默默發聲，肆意抒發心情、亂哈啦、瞎抱怨、偷偷示愛，沒人知道你是誰（真的沒人）～",
+  "about.features": "有什麼酷東西？",
+  "about.feature1": "匿名發文，保證低調到不行",
+  "about.feature2": "附近5公里內的人都看得到(是的, 隔壁鄰居也可能看到)",
+  "about.feature3": "讚就給讚，不爽就噓",
+  "about.feature4": "晚上玩手機不傷眼的黑暗模式也有啦",
+  "about.version": "版本：",
+  "about.credits": "感謝這些神操作",
+  "about.creditsText": "Yapyap 是由一個熱愛匿名社交的開發者打造的，感謝所有參與者的努力和創意！",
+  "about.close": "關閉"
 }

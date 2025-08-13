@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    /* ========== users ========== */
+    match /users/{uid} {
+      // Your app subscribes to the user's own doc and writes votes map, lastVoteAt, etc.
+      allow read, write: if isOwner(uid);
+    }
+
+    /* ========== posts ========== */
+    match /posts/{postId} {
+      allow read: if true;
+      
+      // Optional counters (upvotes/downvotes/commentCount) must be 0 if provided
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.timestamp is timestamp        
+        && (!('upvotes' in request.resource.data) || request.resource.data.upvotes == 0)
+        && (!('downvotes' in request.resource.data) || request.resource.data.downvotes == 0)
+        && (!('commentCount' in request.resource.data) || request.resource.data.commentCount == 0);
+
+      // Update: owner only, and immutable fields cannot change on the client.
+      // Server (Cloud Functions / Admin SDK) bypasses these rules.
+      allow update: if isOwner(resource.data.userId)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.timestamp == resource.data.timestamp        
+        && request.resource.data.upvotes == resource.data.upvotes
+        && request.resource.data.downvotes == resource.data.downvotes
+        && request.resource.data.commentCount == resource.data.commentCount;
+
+      // Delete: owner only
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    /* ========== votes subcollection ========== */
+    // Keep if you let clients manage their own vote docs; otherwise restrict to read.
+    // Your castVote Cloud Function writes to posts/{postId}/votes/{uid} with Admin, so it ignores rules.
+    match /posts/{postId}/votes/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update, delete: if isOwner(uid)
+        && (request.resource.data.value in [-1, 0, 1]);
+    }
+
+    /* ========== comments ========== */
+    match /posts/{postId}/comments/{cid} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.authorId == request.auth.uid;
+    }
+  }
+}

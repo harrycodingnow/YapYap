@@ -22,6 +22,7 @@
   "profile.resetError": "Something went wrong while resetting.",
   "profile.sendFeedback": "Send Feedback",
   "profile.loading": "Loading your profile...",
+  "profile.about": "About",
 
   "feed.title": "Yapyap",
   "feed.subtitle": "What's happening within 5km",
@@ -55,5 +56,18 @@
   "welcome.bullet2": "After 24 hours, they'll disappear automatically. (Coming soon!)",
   "welcome.bullet3": "Keep it chill, anonymous, and respectful.",
   "welcome.footer": "Got it? Let's yap.",
-  "welcome.button": "Got it!"
+  "welcome.button": "Got it!",
+
+  "about.title": "About",
+  "about.appInfo": "App Name: Yapyap",
+  "about.appDescription": "A social platform where you can share your thoughts anonymously and connect with others in your area. Express yourself freely while maintaining your privacy.",
+  "about.features": "Features",
+  "about.feature1": "Anonymous posting with complete privacy",
+  "about.feature2": "Location-based content discovery",
+  "about.feature3": "Upvote and downvote system",
+  "about.feature4": "Dark mode support",
+  "about.version": "Version: ",
+  "about.credits": "Made with luv type shi",
+  "about.creditsText": "Built by Me, Myself and I, u heard.",
+  "about.close": "Close"
 }
