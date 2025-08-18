@@ -1,5 +1,6 @@
 // app/contexts/DarkModeContext.tsx
-import React, { createContext, useContext, useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const DarkModeContext = createContext<{
   isDarkMode: boolean;
@@ -9,10 +10,30 @@ const DarkModeContext = createContext<{
   toggleDarkMode: () => {},
 });
 
-export const DarkModeProvider = ({ children }: { children: React.ReactNode }) => {
+export const DarkModeProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
+  // Load saved mode on app start
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem("darkMode");
+      if (saved !== null) {
+        setIsDarkMode(saved === "true");
+      }
+    })();
+  }, []);
+
+  const toggleDarkMode = async () => {
+    setIsDarkMode((prev) => {
+      const newValue = !prev;
+      AsyncStorage.setItem("darkMode", newValue.toString()); // save preference
+      return newValue;
+    });
+  };
 
   return (
     <DarkModeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
