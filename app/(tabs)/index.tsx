@@ -2,6 +2,7 @@
 import { castVote } from "@/services";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "@motify/components";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useIsFocused } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
@@ -32,7 +33,8 @@ import { db } from "../../firebase";
 import { fetchLatestPostsPage, fetchTopPostsPage } from "../../services/posts";
 import { getDistanceKm } from "../../utils";
 import WelcomePopup from "../components/welcomePopUpModal";
-const MAX_DISTANCE_KM = 50;
+
+const MAX_DISTANCE_KM = 5;
 
 type Post = {
   id: string;
@@ -225,6 +227,7 @@ const PostList = ({
 }) => {
   const { isDarkMode } = useDarkMode();
   const { t } = useTranslation();
+  const tabBarHeight = useBottomTabBarHeight();
 
   if (data.length === 0) {
     return (
@@ -428,7 +431,10 @@ const PostList = ({
           </Pressable>
         );
       }}
-      contentContainerStyle={styles.listContainer}
+      contentContainerStyle={[
+        styles.listContainer,
+        { paddingBottom: tabBarHeight + 16 },
+      ]}
       showsVerticalScrollIndicator={false}
       ItemSeparatorComponent={() => (
         <View

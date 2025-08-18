@@ -1,35 +1,34 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Pressable,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../contexts/AuthContext";
-import { useDarkMode } from "../../contexts/DarkModeContext";
-import { auth, db } from "../../firebase";
-import { deleteUser, signInAnonymously } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { signInAnonymously } from "firebase/auth";
 import {
-  deleteDoc,
   collection,
-  query,
-  orderBy,
-  limit,
-  onSnapshot,
-  where,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
 } from "firebase/firestore";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useAuth } from "../../contexts/AuthContext";
+import { useDarkMode } from "../../contexts/DarkModeContext";
 import i18n, { setI18nLanguage } from "../../contexts/i18n";
+import { auth, db } from "../../firebase";
 import AboutModal from "../components/aboutPopUpModal"; // Import the new AboutModal component
 
 // Types
@@ -181,7 +180,14 @@ export default function ProfileScreen() {
   }, []);
 
   const toggleAvatar = async () => {
-    const newEmoji = avatarEmoji === "🦸🏻‍♂️" ? "🦸🏻‍♀️" : "🦸🏻‍♂️";
+    const newEmoji =
+      avatarEmoji === "🦸🏻"
+        ? "🦸🏻‍♀️"
+        : avatarEmoji === "🦸🏻‍♀️"
+        ? "🦊"
+        : avatarEmoji === "🦊"
+        ? "🐰"
+        : "🦸🏻";
     setAvatarEmoji(newEmoji);
     await AsyncStorage.setItem(AVATAR_KEY, newEmoji);
   };

@@ -17,7 +17,6 @@ import MapView, {
   Circle,
   MapView as MapViewType,
   Marker,
-  PROVIDER_GOOGLE,
   Region,
 } from "react-native-maps";
 // @ts-ignore
@@ -213,8 +212,10 @@ export default function CreatePostScreen() {
         let loc = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Highest,
         });
-        // setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
-        setLocation({ latitude: 25.082029, longitude: 121.545623 });
+        setLocation({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
       } catch (e: any) {
         setErrorMsg("Could not fetch location");
       } finally {
@@ -292,7 +293,7 @@ export default function CreatePostScreen() {
     Keyboard.dismiss();
   };
 
-  const RADIUS_METERS = 3000;
+  const RADIUS_METERS = 5000;
 
   const handleCenterOnUser = () => {
     if (location && mapRef.current) {
@@ -331,7 +332,6 @@ export default function CreatePostScreen() {
                 <MapView
                   ref={mapRef}
                   style={styles.map}
-                  provider={PROVIDER_GOOGLE}
                   initialRegion={getRegionForRadius(
                     location.latitude,
                     location.longitude,
@@ -347,9 +347,10 @@ export default function CreatePostScreen() {
                 >
                   <Circle
                     center={location}
-                    radius={RADIUS_METERS}
+                    radius={140}
                     strokeWidth={0}
-                    fillColor="rgba(224, 174, 73, 0.15)"
+                    strokeColor="transparent"
+                    fillColor="rgba(253,186,116,0.25)" // light orange, ~25% opacity
                   />
                   <Circle
                     center={location}
@@ -358,7 +359,15 @@ export default function CreatePostScreen() {
                     fillColor="rgba(233,213,255,0.1)"
                     strokeWidth={2}
                   />
-                  <Marker coordinate={location} pinColor="#FDBA74" />
+                  <Marker
+                    coordinate={location}
+                    anchor={{ x: 0.5, y: 0.5 }}
+                    tracksViewChanges={false}
+                  >
+                    <View style={styles.hereDotOuter}>
+                      <View style={styles.hereDotInner} />
+                    </View>
+                  </Marker>
                 </MapView>
                 <TouchableOpacity
                   style={[
@@ -695,5 +704,24 @@ const styles = StyleSheet.create({
   },
   successDark: {
     color: "#10B981",
+  },
+  hereDotOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "rgba(253,186,116,0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#FDBA74",
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  hereDotInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#FDBA74",
   },
 });
