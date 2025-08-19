@@ -2,6 +2,7 @@
 import { castVote } from "@/services";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "@motify/components";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useIsFocused } from "@react-navigation/native";
 import * as Location from "expo-location";
@@ -205,7 +206,6 @@ const LoadingIndicator = ({ size }: { size: number }) => {
     </View>
   );
 };
-
 const PostList = ({
   data,
   onVote,
@@ -229,38 +229,37 @@ const PostList = ({
   const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
 
-  if (data.length === 0) {
-    return (
-      <View
+  // Empty state component
+  const EmptyState = () => (
+    <View
+      style={[
+        styles.emptyStateContainer,
+        isDarkMode && styles.emptyStateContainerDark,
+      ]}
+    >
+      <Ionicons
+        name="location-outline"
+        size={48}
+        color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+      />
+      <Text
         style={[
-          styles.emptyStateContainer,
-          isDarkMode && styles.emptyStateContainerDark,
+          styles.emptyStateTitle,
+          isDarkMode && styles.emptyStateTitleDark,
         ]}
       >
-        <Ionicons
-          name="location-outline"
-          size={48}
-          color={isDarkMode ? "#9CA3AF" : "#6B7280"}
-        />
-        <Text
-          style={[
-            styles.emptyStateTitle,
-            isDarkMode && styles.emptyStateTitleDark,
-          ]}
-        >
-          {t("feed.empty.title")}
-        </Text>
-        <Text
-          style={[
-            styles.emptyStateSubtitle,
-            isDarkMode && styles.emptyStateSubtitleDark,
-          ]}
-        >
-          {t("feed.empty.subtitle")}
-        </Text>
-      </View>
-    );
-  }
+        {t("feed.empty.title")}
+      </Text>
+      <Text
+        style={[
+          styles.emptyStateSubtitle,
+          isDarkMode && styles.emptyStateSubtitleDark,
+        ]}
+      >
+        {t("feed.empty.subtitle")}
+      </Text>
+    </View>
+  );
 
   return (
     <FlatList
@@ -350,21 +349,6 @@ const PostList = ({
                       </View>
                     )}
                   </View>
-                  {/* <View style={styles.actionRow}>
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.replyButton,
-                        pressed && styles.replyButtonPressed,
-                        isDarkMode && styles.replyButtonDark
-                      ]}
-                      onPress={() => onComment(item.id)}
-                    >
-                      <View style={styles.replyButtonContent}>
-                        <Ionicons name="chatbubble-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
-                        <Text style={[styles.replyButtonText, isDarkMode && styles.replyButtonTextDark]}>{t('common.reply')}</Text>
-                      </View>
-                    </Pressable>
-                  </View> */}
                 </View>
               </View>
               <View style={styles.voteContainer}>
@@ -431,9 +415,12 @@ const PostList = ({
           </Pressable>
         );
       }}
+      ListEmptyComponent={<EmptyState />}
       contentContainerStyle={[
         styles.listContainer,
         { paddingBottom: tabBarHeight + 16 },
+
+        data.length === 0 && { flex: 1 },
       ]}
       showsVerticalScrollIndicator={false}
       ItemSeparatorComponent={() => (
@@ -570,6 +557,24 @@ export default function FeedTabScreen() {
       }
     })();
   }, [userLocation]);
+
+  useEffect(() => {
+    const checkFirstLaunch = async () => {
+      try {
+        const hasSeenWelcome = await AsyncStorage.getItem("hasSeenWelcome");
+        if (hasSeenWelcome === null) {
+          setShowPopup(true);
+        }
+      } catch (error) {
+        console.error("Error reading AsyncStorage:", error);
+      }
+    };
+
+    if (user) {
+      // Only check when user is authenticated
+      checkFirstLaunch();
+    }
+  }, [user]);
 
   // Load user votes from Firestore when user changes
   useEffect(() => {
@@ -731,6 +736,16 @@ export default function FeedTabScreen() {
     );
   }
 
+  const handleClosePopup = async () => {
+    try {
+      await AsyncStorage.setItem("hasSeenWelcome", "true");
+      setShowPopup(false);
+    } catch (error) {
+      console.error("Error saving to AsyncStorage:", error);
+      setShowPopup(false); // Still close even if save fails
+    }
+  };
+
   const refreshHot = async () => {
     setRefreshingHot(true);
     setHotCursor(null);
@@ -830,7 +845,7 @@ export default function FeedTabScreen() {
           />
         )}
       />
-      <WelcomePopup visible={showPopup} onClose={() => setShowPopup(false)} />
+      <WelcomePopup visible={showPopup} onClose={handleClosePopup} />
     </View>
   );
 }
