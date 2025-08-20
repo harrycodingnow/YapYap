@@ -15,8 +15,9 @@ export default function RootLayout() {
   useEffect(() => {
     (async () => {
       const saved = await getSavedLanguage();
-      if (saved && saved !== i18n.language) {
-        await i18n.changeLanguage(saved);
+      const lang = saved ?? "zh"; // ✅ default to Chinese
+      if (lang !== i18n.language) {
+        await i18n.changeLanguage(lang);
       }
       setLangReady(true);
     })();
