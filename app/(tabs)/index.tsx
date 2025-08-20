@@ -84,6 +84,16 @@ function filterPostsByDistance(
     return distance <= maxDistance;
   });
 }
+const deduplicatePosts = (posts: Post[]): Post[] => {
+  const seen = new Set();
+  return posts.filter((post) => {
+    if (seen.has(post.id)) {
+      return false;
+    }
+    seen.add(post.id);
+    return true;
+  });
+};
 
 const toServerValue = (v: VoteType): VoteValue =>
   v === "up" ? 1 : v === "down" ? -1 : 0;
@@ -197,7 +207,7 @@ const LoadingIndicator = ({ size }: { size: number }) => {
       />
       <Text
         style={[
-          { fontSize: 16, marginTop: 20 },
+          { fontSize: 16, marginTop: 20, textAlign: "center" },
           isDarkMode ? { color: "#9CA3AF" } : { color: "#6B7280" },
         ]}
       >
@@ -503,7 +513,12 @@ export default function FeedTabScreen() {
       );
       console.log("[Hot] page items:", items.length, "hasNext:", !!nextCursor);
       const norm = normalize(items);
-      setHotPosts((prev) => (initial ? norm : prev.concat(norm)));
+
+      setHotPosts((prev) => {
+        const newPosts = initial ? norm : prev.concat(norm);
+        return deduplicatePosts(newPosts); // Deduplicate here
+      });
+
       setHotCursor(nextCursor);
       setHotDone(items.length === 0 || !nextCursor);
       setHotLoading(false);
@@ -519,7 +534,12 @@ export default function FeedTabScreen() {
         initial ? undefined : recentCursor || undefined
       );
       const norm = normalize(items);
-      setRecentPosts((prev) => (initial ? norm : prev.concat(norm)));
+
+      setRecentPosts((prev) => {
+        const newPosts = initial ? norm : prev.concat(norm);
+        return deduplicatePosts(newPosts); // Deduplicate here
+      });
+
       setRecentCursor(nextCursor);
       setRecentDone(items.length === 0 || !nextCursor);
       setRecentLoading(false);
@@ -750,8 +770,8 @@ export default function FeedTabScreen() {
     setRefreshingHot(true);
     setHotCursor(null);
     setHotDone(false);
-    loadHot(true);
-    loadRecent(true);
+    setHotPosts([]); // Clear existing posts
+    await loadHot(true);
     setRefreshingHot(false);
   };
 
@@ -759,8 +779,8 @@ export default function FeedTabScreen() {
     setRefreshingRecent(true);
     setRecentCursor(null);
     setRecentDone(false);
-    loadHot(true);
-    loadRecent(true);
+    setRecentPosts([]); // Clear existing posts
+    await loadRecent(true);
     setRefreshingRecent(false);
   };
 

@@ -37,9 +37,10 @@
   "create.posting": "Posting...",
   "create.success": "Post shared successfully!",
   "create.error": "Failed to post. Please try again.",
+  "create.loading": "Fetching your location...",
 
   "common.reply": "Reply",
-  "common.loading": "Loading...",
+  "common.loading": "Yaps are only visible within 5km and disappear after 24 hours.",
   "common.error": "An error occurred",
   "common.retry": "Retry",
   "comments.title": "Comments",

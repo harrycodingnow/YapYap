@@ -136,7 +136,7 @@ const LoadingIndicator = ({ size }: { size: number }) => {
       <Text
         style={[styles.mapLoadingText, isDarkMode && styles.mapLoadingTextDark]}
       >
-        {t("common.loading")}
+        {t("create.loading")}
       </Text>
     </View>
   );

@@ -36,9 +36,10 @@
   "create.posting": "發佈中...",
   "create.success": "發佈成功！",
   "create.error": "發佈失敗，請再試一次。",
+  "create.loading": "正在獲取你的位置...",
 
   "common.reply": "回覆",
-  "common.loading": "載入中...",
+  "common.loading": "Yaps只在5公里內可見,並會在24小時後消失。",
   "common.error": "發生錯誤",
   "common.retry": "重試",
 
