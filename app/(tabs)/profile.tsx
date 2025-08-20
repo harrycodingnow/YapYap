@@ -30,7 +30,10 @@ import { useDarkMode } from "../../contexts/DarkModeContext";
 import i18n, { setI18nLanguage } from "../../contexts/i18n";
 import { auth, db } from "../../firebase";
 import AboutModal from "../components/aboutPopUpModal"; // Import the new AboutModal component
-
+const swallowPermOrMissing = (e: any) => {
+  if (e?.code === "permission-denied" || e?.code === "not-found") return; // ignore
+  throw e; // bubble up anything unexpected
+};
 // Types
 type Post = {
   id: string;
@@ -154,7 +157,7 @@ export default function ProfileScreen() {
         deleteDoc(doc(db, "posts", docSnap.id))
       );
       await Promise.all(deletePromises);
-      await deleteDoc(doc(db, "users", uid));
+      await deleteDoc(doc(db, "users", uid)).catch(swallowPermOrMissing);
       await deleteUserPosts(uid);
 
       // 🚨 Clear stored device ID so new user gets fresh ID

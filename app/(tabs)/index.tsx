@@ -761,11 +761,20 @@ export default function FeedTabScreen() {
     setRefreshingRecent(false);
   };
 
-  const filteredHot = filterPostsByDistance(
-    hotPosts,
-    userLocation,
-    MAX_DISTANCE_KM
-  );
+  const filteredHot = useMemo(() => {
+    const filtered = filterPostsByDistance(
+      hotPosts,
+      userLocation,
+      MAX_DISTANCE_KM
+    );
+
+    // Sort hot posts by total votes (upvotes - downvotes) in descending order
+    return filtered.sort((a, b) => {
+      const aScore = (a.upvotes || 0) - (a.downvotes || 0);
+      const bScore = (b.upvotes || 0) - (b.downvotes || 0);
+      return bScore - aScore; // Descending order
+    });
+  }, [hotPosts, userLocation]);
   const filteredRecent = filterPostsByDistance(
     recentPosts,
     userLocation,
