@@ -1,7 +1,7 @@
 //Index.tsx
 import { castVote } from "@/services";
 import { Ionicons } from "@expo/vector-icons";
-import { MotiText, MotiView } from "@motify/components";
+import { MotiView } from "@motify/components";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useIsFocused } from "@react-navigation/native";
@@ -109,134 +109,42 @@ const Header = ({
   const { t } = useTranslation();
 
   return (
-    <MotiView
-      from={{
-        opacity: 0,
-        translateY: -100,
-        scale: 0.8,
-      }}
-      animate={{
-        opacity: 1,
-        translateY: 0,
-        scale: 1,
-      }}
-      transition={{
-        type: "spring",
-        damping: 20,
-        stiffness: 300,
-        delay: 200,
-      }}
-      style={[styles.header, isDarkMode && styles.headerDark]}
-    >
-      {/* Floating background particles */}
-      <MotiView
-        from={{ rotate: "0deg", scale: 0 }}
-        animate={{ rotate: "360deg", scale: 1 }}
-        transition={{
-          type: "timing",
-          duration: 20000,
-          loop: true,
-        }}
-        style={{
-          position: "absolute",
-          top: 20,
-          right: 50,
-          width: 30,
-          height: 30,
-          borderRadius: 15,
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-        }}
-      />
-
-      <MotiView
-        from={{ rotate: "0deg", scale: 0 }}
-        animate={{ rotate: "-360deg", scale: 1 }}
-        transition={{
-          type: "timing",
-          duration: 15000,
-          loop: true,
-        }}
-        style={{
-          position: "absolute",
-          top: 60,
-          left: 30,
-          width: 20,
-          height: 20,
-          borderRadius: 10,
-          backgroundColor: "rgba(255, 255, 255, 0.15)",
-        }}
-      />
-
+    <View style={[styles.header, isDarkMode && styles.headerDark]}>
       <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
-          <MotiView
-            from={{ translateX: -50, opacity: 0 }}
-            animate={{ translateX: 0, opacity: 1 }}
-            transition={{
-              type: "spring",
-              damping: 15,
-              delay: 400,
-            }}
-          >
+          <View>
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
             >
-              <MotiText
-                from={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{
-                  type: "spring",
-                  damping: 10,
-                  delay: 600,
-                }}
+              <Text
                 style={[
                   styles.headerTitleWithOutline,
                   isDarkMode && styles.headerTitleDark,
                 ]}
               >
                 {t("feed.title")}
-              </MotiText>
+              </Text>
 
-              <MotiView
-                from={{ rotate: "0deg", scale: 0 }}
-                animate={{ rotate: "360deg", scale: 1 }}
-                transition={{
-                  type: "spring",
-                  damping: 15,
-                  delay: 800,
-                }}
-              >
-                <Pressable onPress={onShowPopup} hitSlop={10}>
-                  <Ionicons
-                    name="information-circle-outline"
-                    size={20}
-                    color="#FFFFFF"
-                  />
-                </Pressable>
-              </MotiView>
+              <Pressable onPress={onShowPopup} hitSlop={10}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={20}
+                  color="#FFFFFF"
+                />
+              </Pressable>
             </View>
-          </MotiView>
+          </View>
         </View>
 
-        <MotiView
-          from={{ scale: 0, rotate: "180deg" }}
-          animate={{ scale: 1, rotate: "0deg" }}
-          transition={{
-            type: "spring",
-            damping: 20,
-            delay: 1000,
-          }}
-        >
-          <Pressable onPress={toggleDarkMode} style={styles.darkModeButton}>
-            <Ionicons
-              name={isDarkMode ? "sunny" : "moon"}
-              size={24}
-              color={isDarkMode ? "#FDBA74" : "#FFFFFF"}
-            />
-          </Pressable>
-        </MotiView>
+        <Pressable onPress={toggleDarkMode} style={styles.darkModeButton}>
+          <Ionicons
+            name={isDarkMode ? "sunny" : "moon"}
+            size={24}
+            color={isDarkMode ? "#FDBA74" : "#FFFFFF"}
+          />
+        </Pressable>
       </View>
-    </MotiView>
+    </View>
   );
 };
 
