@@ -22,7 +22,6 @@ import MapView, {
 // @ts-ignore
 import { MotiView } from "@motify/components";
 import { useNavigation } from "@react-navigation/native";
-import * as Location from "expo-location";
 import {
   addDoc,
   collection,
@@ -36,6 +35,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDarkMode } from "../../contexts/DarkModeContext";
+import { useLocation } from "../../contexts/LocationContext";
 import { db } from "../../firebase";
 
 function getRegionForRadius(
@@ -148,12 +148,12 @@ export default function CreatePostScreen() {
   const { isDarkMode } = useDarkMode();
   const { t } = useTranslation();
 
-  const [location, setLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const {
+    location,
+    loading: locationLoading,
+    error: locationError,
+    refresh: refreshLocation,
+  } = useLocation();
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -200,29 +200,14 @@ export default function CreatePostScreen() {
   ];
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          setErrorMsg("Permission to access location was denied");
-          setLoading(false);
-          return;
-        }
-        let loc = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest,
-        });
-        setLocation({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-        });
-      } catch (e: any) {
-        setErrorMsg("Could not fetch location");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    if (locationError && !locationLoading) {
+      // Optionally retry location after a delay
+      const retryTimer = setTimeout(() => {
+        refreshLocation();
+      }, 3000);
+      return () => clearTimeout(retryTimer);
+    }
+  }, [locationError, locationLoading, refreshLocation]);
 
   const handleTextChange = (newText: string) => {
     const limit = getCharacterLimit(newText);
@@ -319,13 +304,34 @@ export default function CreatePostScreen() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.inner}>
           <View style={styles.mapContainer}>
-            {loading ? (
+            {locationLoading ? (
               <LoadingIndicator size={40} />
-            ) : errorMsg ? (
+            ) : locationError ? (
               <View
                 style={[styles.mapLoading, isDarkMode && styles.mapLoadingDark]}
               >
-                <Text style={styles.mapError}>{t("common.error")}</Text>
+                <Text style={styles.mapError}>{locationError}</Text>
+                <TouchableOpacity
+                  onPress={refreshLocation}
+                  style={{
+                    marginTop: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    backgroundColor: isDarkMode ? "#374151" : "#F3F4F6",
+                    borderRadius: 8,
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={{
+                      color: "#FDBA74",
+                      fontWeight: "600",
+                      fontSize: 14,
+                    }}
+                  >
+                    {t("common.retry")}
+                  </Text>
+                </TouchableOpacity>
               </View>
             ) : location ? (
               <>
@@ -350,7 +356,7 @@ export default function CreatePostScreen() {
                     radius={140}
                     strokeWidth={0}
                     strokeColor="transparent"
-                    fillColor="rgba(253,186,116,0.25)" // light orange, ~25% opacity
+                    fillColor="rgba(253,186,116,0.25)"
                   />
                   <Circle
                     center={location}
@@ -392,10 +398,10 @@ export default function CreatePostScreen() {
                   ]}
                   onPress={handleCenterOnUser}
                   activeOpacity={0.7}
-                  disabled={loading}
+                  disabled={locationLoading} // Changed from 'loading' to 'locationLoading'
                   accessibilityLabel="Center map on your location"
                 >
-                  {loading ? (
+                  {locationLoading ? ( // Changed from 'loading' to 'locationLoading'
                     <ActivityIndicator size="small" color="#FDBA74" />
                   ) : (
                     <View style={styles.centerButtonIconOuter}>
@@ -404,7 +410,42 @@ export default function CreatePostScreen() {
                   )}
                 </TouchableOpacity>
               </>
-            ) : null}
+            ) : (
+              // Fallback state when no location, no loading, and no error
+              <View
+                style={[styles.mapLoading, isDarkMode && styles.mapLoadingDark]}
+              >
+                <Text
+                  style={[
+                    styles.mapError,
+                    { color: isDarkMode ? "#9CA3AF" : "#6B7280" },
+                  ]}
+                >
+                  {t("common.noLocation")}
+                </Text>
+                <TouchableOpacity
+                  onPress={refreshLocation}
+                  style={{
+                    marginTop: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    backgroundColor: "#FDBA74",
+                    borderRadius: 8,
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontWeight: "600",
+                      fontSize: 14,
+                    }}
+                  >
+                    {t("common.getLocation")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           <View style={styles.inputContainer}>

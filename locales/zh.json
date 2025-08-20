@@ -39,9 +39,12 @@
   "create.loading": "正在獲取你的位置...",
 
   "common.reply": "回覆",
-  "common.loading": "Yaps只在5公里內可見,並會在24小時後消失。",
+  "common.loading1": "Yaps只在5公里內可見",
+  "common.loading2": "更多資訊請查看標題旁的 ⓘ",
   "common.error": "發生錯誤",
   "common.retry": "重試",
+  "common.noLocation": "無法取得位置資料",
+  "common.getLocation": "獲取位置",
 
   "comments.title": "留言",
   "comments.placeholder": "寫留言...",

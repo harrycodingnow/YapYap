@@ -40,7 +40,8 @@
   "create.loading": "Fetching your location...",
 
   "common.reply": "Reply",
-  "common.loading": "Yaps are only visible within 5km and disappear after 24 hours.",
+  "common.loading1": "Yaps are only visible within 5km",
+  "common.loading2": "More information in ⓘ beside Header",
   "common.error": "An error occurred",
   "common.retry": "Retry",
   "comments.title": "Comments",
@@ -51,6 +52,8 @@
   "comments.votes": "votes",
   "comments.errorTitle": "Error",
   "comments.errorBody": "Failed to post comment. Please try again.",
+  "common.noLocation": "No location data available",
+  "common.getLocation": "Get Location",
 
   "welcome.title": "Welcome to Yapyap!",
   "welcome.bullet1": "Posts (Yaps) are visible to nearby users within 5 km.",

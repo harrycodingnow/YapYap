@@ -5,7 +5,6 @@ import { MotiView } from "@motify/components";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useIsFocused } from "@react-navigation/native";
-import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import type { DocumentSnapshot } from "firebase/firestore";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -209,8 +208,16 @@ const LoadingIndicator = ({ size }: { size: number }) => {
           isDarkMode ? { color: "#9CA3AF" } : { color: "#6B7280" },
         ]}
       >
-        {t("common.loading")}
+        {t("common.loading1")}
       </Text>
+      {/* <Text
+        style={[
+          { fontSize: 16, marginTop: 20, textAlign: "center" },
+          isDarkMode ? { color: "#9CA3AF" } : { color: "#6B7280" },
+        ]}
+      >
+        {t("common.loading2")}
+      </Text> */}
     </View>
   );
 };
@@ -465,15 +472,15 @@ export default function FeedTabScreen() {
   const [userVotes, setUserVotes] = useState<{ [postId: string]: VoteType }>(
     {}
   );
-  const [locationLoading, setLocationLoading] = useState(true);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const { location: userLocation, setLocation: setUserLocation } =
-    useLocation();
+  const {
+    location: userLocation,
+    loading: locationLoading,
+    error: locationError,
+    refresh: refreshLocation,
+  } = useLocation();
 
-  // Test loading function for development
-  const handleTestLoading = () => {
-    setLocationLoading(true);
-    setTimeout(() => setLocationLoading(false), 3000);
+  const handleTestLoading = async () => {
+    await refreshLocation();
   };
 
   const [hotPosts, setHotPosts] = useState<Post[]>([]);
@@ -546,35 +553,7 @@ export default function FeedTabScreen() {
   );
 
   // Fetch user location on mount
-  useEffect(() => {
-    if (userLocation) {
-      setLocationLoading(false);
-      return;
-    }
-
-    setLocationLoading(true);
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          setLocationError("Permission to access location was denied");
-          return;
-        }
-
-        const loc = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest,
-        });
-        setUserLocation({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-        });
-      } catch (e: any) {
-        setLocationError("Could not fetch location");
-      } finally {
-        setLocationLoading(false);
-      }
-    })();
-  }, [userLocation]);
+  useEffect(() => {}, [userLocation]);
 
   useEffect(() => {
     const checkFirstLaunch = async () => {
