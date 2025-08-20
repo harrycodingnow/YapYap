@@ -1,13 +1,13 @@
 // app/_layout.tsx
-import { Slot } from 'expo-router';
-import { DarkModeProvider } from '@/contexts/DarkModeContext';
-import { LocationProvider } from '@/contexts/LocationContext';
-import { AuthProvider } from '@/contexts/AuthContext';
-import '../contexts/i18n';
-import { useEffect, useState } from 'react';
-import { getSavedLanguage } from '../contexts/i18n';
-import i18n from '../contexts/i18n';
-import { ActivityIndicator, View } from 'react-native';
+import "react-native-reanimated";
+
+import { AuthProvider } from "@/contexts/AuthContext";
+import { DarkModeProvider } from "@/contexts/DarkModeContext";
+import { LocationProvider } from "@/contexts/LocationContext";
+import { Slot } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
+import i18n, { getSavedLanguage } from "../contexts/i18n";
 
 export default function RootLayout() {
   const [langReady, setLangReady] = useState(false);
@@ -24,7 +24,7 @@ export default function RootLayout() {
 
   if (!langReady) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#FDBA74" />
       </View>
     );
