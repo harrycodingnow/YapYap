@@ -450,8 +450,8 @@ const PostList = ({
     />
   );
 };
-
 export default function FeedTabScreen() {
+  // All hooks must be declared at the top level, unconditionally
   const isFocused = useIsFocused();
   const locationFetchedRef = useRef(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -461,6 +461,34 @@ export default function FeedTabScreen() {
   const { isDarkMode } = useDarkMode();
   const { t, i18n } = useTranslation();
   const [index, setIndex] = useState(0);
+  const tabBarHeight = useBottomTabBarHeight();
+
+  // All state hooks
+  const [userVotes, setUserVotes] = useState<{ [postId: string]: VoteType }>(
+    {}
+  );
+  const [hotPosts, setHotPosts] = useState<Post[]>([]);
+  const [hotCursor, setHotCursor] = useState<DocumentSnapshot | null>(null);
+  const [hotDone, setHotDone] = useState(false);
+  const [hotLoading, setHotLoading] = useState(false);
+  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
+  const [recentCursor, setRecentCursor] = useState<DocumentSnapshot | null>(
+    null
+  );
+  const [recentDone, setRecentDone] = useState(false);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [refreshingHot, setRefreshingHot] = useState(false);
+  const [refreshingRecent, setRefreshingRecent] = useState(false);
+
+  // Custom hooks
+  const {
+    location: userLocation,
+    loading: locationLoading,
+    error: locationError,
+    refresh: refreshLocation,
+  } = useLocation();
+
+  // Memoized values
   const routes = useMemo(
     () => [
       { key: "hot", title: t("feed.tab.hot") },
@@ -469,45 +497,36 @@ export default function FeedTabScreen() {
     [t, i18n.language]
   );
 
-  const [userVotes, setUserVotes] = useState<{ [postId: string]: VoteType }>(
-    {}
+  const filteredHot = useMemo(() => {
+    const filtered = filterPostsByDistance(
+      hotPosts,
+      userLocation,
+      MAX_DISTANCE_KM
+    );
+
+    // Sort hot posts by total votes (upvotes - downvotes) in descending order
+    return filtered.sort((a, b) => {
+      const aScore = (a.upvotes || 0) - (a.downvotes || 0);
+      const bScore = (b.upvotes || 0) - (b.downvotes || 0);
+      return bScore - aScore; // Descending order
+    });
+  }, [hotPosts, userLocation]);
+
+  const filteredRecent = useMemo(() => {
+    return filterPostsByDistance(recentPosts, userLocation, MAX_DISTANCE_KM);
+  }, [recentPosts, userLocation]);
+
+  // Callback functions
+  const normalize = useCallback(
+    (items: any[]): Post[] =>
+      items.map((p) => ({
+        ...p,
+        timestamp: p.timestamp?.toDate
+          ? p.timestamp.toDate()
+          : new Date(p.timestamp),
+      })),
+    []
   );
-  const {
-    location: userLocation,
-    loading: locationLoading,
-    error: locationError,
-    refresh: refreshLocation,
-  } = useLocation();
-
-  const handleTestLoading = async () => {
-    await refreshLocation();
-  };
-
-  const [hotPosts, setHotPosts] = useState<Post[]>([]);
-  const [hotCursor, setHotCursor] = useState<DocumentSnapshot | null>(null);
-  const [hotDone, setHotDone] = useState(false);
-  const [hotLoading, setHotLoading] = useState(false);
-
-  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
-  const [recentCursor, setRecentCursor] = useState<DocumentSnapshot | null>(
-    null
-  );
-  const [recentDone, setRecentDone] = useState(false);
-  const [recentLoading, setRecentLoading] = useState(false);
-
-  const [refreshingHot, setRefreshingHot] = useState(false);
-  const [refreshingRecent, setRefreshingRecent] = useState(false);
-
-  const normalize = (items: any[]): Post[] =>
-    items.map((p) => ({
-      ...p,
-      timestamp: p.timestamp?.toDate
-        ? p.timestamp.toDate()
-        : new Date(p.timestamp),
-    }));
-
-  console.log("[Hot Feed1] :", hotPosts.length);
-  console.log("[Recent Feed1] :", recentPosts.length);
 
   const loadHot = useCallback(
     async (initial = false) => {
@@ -528,7 +547,7 @@ export default function FeedTabScreen() {
       setHotDone(items.length === 0 || !nextCursor);
       setHotLoading(false);
     },
-    [hotLoading, hotDone, hotCursor]
+    [hotLoading, hotDone, hotCursor, normalize]
   );
 
   const loadRecent = useCallback(
@@ -549,10 +568,113 @@ export default function FeedTabScreen() {
       setRecentDone(items.length === 0 || !nextCursor);
       setRecentLoading(false);
     },
-    [recentLoading, recentDone, recentCursor]
+    [recentLoading, recentDone, recentCursor, normalize]
   );
 
-  // Fetch user location on mount
+  const handleTestLoading = useCallback(async () => {
+    await refreshLocation();
+  }, [refreshLocation]);
+
+  const handleVote = useCallback(
+    async (postId: string, newVote: VoteType) => {
+      const currentVote = userVotes[postId] ?? null;
+
+      // Calculate the vote delta
+      const getDelta = (cur: VoteType | null, nxt: VoteType | null) => {
+        if (cur === nxt) return [0, 0];
+        if (cur === "up" && nxt === "down") return [-1, 1];
+        if (cur === "down" && nxt === "up") return [1, -1];
+        if (cur === null && nxt === "up") return [1, 0];
+        if (cur === null && nxt === "down") return [0, 1];
+        if (cur === "up" && nxt === null) return [-1, 0];
+        if (cur === "down" && nxt === null) return [0, -1];
+        return [0, 0];
+      };
+
+      const [updelta, downdelta] = getDelta(currentVote, newVote);
+
+      // Optimistic UI update
+      setUserVotes((prev) => ({ ...prev, [postId]: newVote }));
+      const apply = (arr: Post[]) =>
+        arr.map((p) =>
+          p.id !== postId
+            ? p
+            : {
+                ...p,
+                upvotes: (p.upvotes ?? 0) + updelta,
+                downvotes: (p.downvotes ?? 0) + downdelta,
+              }
+        );
+
+      // Update both feeds optimistically
+      setHotPosts((prev) => apply(prev));
+      setRecentPosts((prev) => apply(prev));
+
+      try {
+        // Send the vote to the server
+        await castVote(
+          postId,
+          newVote === "up" ? 1 : newVote === "down" ? -1 : 0
+        );
+      } catch (err) {
+        console.error("Vote failed", err);
+
+        // Revert the optimistic update if the server call fails
+        setUserVotes((prev) => ({ ...prev, [postId]: currentVote }));
+        const revert = (arr: Post[]) =>
+          arr.map((p) =>
+            p.id !== postId
+              ? p
+              : {
+                  ...p,
+                  upvotes: (p.upvotes ?? 0) - updelta,
+                  downvotes: (p.downvotes ?? 0) - downdelta,
+                }
+          );
+        setHotPosts((prev) => revert(prev));
+        setRecentPosts((prev) => revert(prev));
+      }
+    },
+    [userVotes]
+  );
+
+  const handleComment = useCallback(
+    (postId: string) => {
+      // Navigate to comment screen
+      router.push(`/comments/${postId}`);
+    },
+    [router]
+  );
+
+  const handleClosePopup = useCallback(async () => {
+    try {
+      await AsyncStorage.setItem("hasSeenWelcome", "true");
+      setShowPopup(false);
+    } catch (error) {
+      console.error("Error saving to AsyncStorage:", error);
+      setShowPopup(false); // Still close even if save fails
+    }
+  }, []);
+
+  const refreshHot = useCallback(async () => {
+    setRefreshingHot(true);
+    setHotCursor(null);
+    setHotDone(false);
+    setHotPosts([]); // Clear existing posts
+    await loadHot(true);
+    setRefreshingHot(false);
+  }, [loadHot]);
+
+  const refreshRecent = useCallback(async () => {
+    setRefreshingRecent(true);
+    setRecentCursor(null);
+    setRecentDone(false);
+    setRecentPosts([]); // Clear existing posts
+    await loadRecent(true);
+    setRefreshingRecent(false);
+  }, [loadRecent]);
+
+  // All useEffect hooks
   useEffect(() => {}, [userLocation]);
 
   useEffect(() => {
@@ -622,7 +744,7 @@ export default function FeedTabScreen() {
     if (index === 1 && recentPosts.length === 0) {
       loadRecent(true);
     }
-  }, [index, recentPosts.length]);
+  }, [index, recentPosts.length, loadRecent]);
 
   // Keep this for component lifecycle (unchanged):
   useEffect(() => {
@@ -632,86 +754,57 @@ export default function FeedTabScreen() {
     };
   }, []);
 
-  const getVoteDelta = (
-    currentVote: VoteType | null,
-    newVote: VoteType | null
-  ) => {
-    if (currentVote === newVote) return [0, 0];
-    if (currentVote === "up" && newVote === "down") return [-1, 1];
-    if (currentVote === "down" && newVote === "up") return [1, -1];
-    if (currentVote === null && newVote === "up") return [1, 0];
-    if (currentVote === null && newVote === "down") return [0, 1];
-    if (currentVote === "up" && newVote === null) return [-1, 0];
-    if (currentVote === "down" && newVote === null) return [0, -1];
-    return [0, 0];
-  };
+  // Render scene function
+  const renderScene = useCallback(
+    ({ route }: { route: { key: string } }) => {
+      switch (route.key) {
+        case "hot":
+          return (
+            <PostList
+              data={filteredHot}
+              onVote={handleVote}
+              onComment={handleComment}
+              userVotes={userVotes}
+              userLocation={userLocation}
+              onEndReached={() => loadHot()}
+              refreshing={refreshingHot}
+              onRefresh={refreshHot}
+            />
+          );
+        case "recent":
+          return (
+            <PostList
+              data={filteredRecent}
+              onVote={handleVote}
+              onComment={handleComment}
+              userVotes={userVotes}
+              userLocation={userLocation}
+              onEndReached={() => loadRecent()}
+              refreshing={refreshingRecent}
+              onRefresh={refreshRecent}
+            />
+          );
+        default:
+          return null;
+      }
+    },
+    [
+      filteredHot,
+      filteredRecent,
+      handleVote,
+      handleComment,
+      userVotes,
+      userLocation,
+      loadHot,
+      loadRecent,
+      refreshingHot,
+      refreshingRecent,
+      refreshHot,
+      refreshRecent,
+    ]
+  );
 
-  async function handleVote(postId: string, newVote: VoteType) {
-    const currentVote = userVotes[postId] ?? null;
-
-    // Calculate the vote delta
-    const getDelta = (cur: VoteType | null, nxt: VoteType | null) => {
-      if (cur === nxt) return [0, 0];
-      if (cur === "up" && nxt === "down") return [-1, 1];
-      if (cur === "down" && nxt === "up") return [1, -1];
-      if (cur === null && nxt === "up") return [1, 0];
-      if (cur === null && nxt === "down") return [0, 1];
-      if (cur === "up" && nxt === null) return [-1, 0];
-      if (cur === "down" && nxt === null) return [0, -1];
-      return [0, 0];
-    };
-
-    const [updelta, downdelta] = getDelta(currentVote, newVote);
-
-    // Optimistic UI update
-    setUserVotes((prev) => ({ ...prev, [postId]: newVote }));
-    const apply = (arr: Post[]) =>
-      arr.map((p) =>
-        p.id !== postId
-          ? p
-          : {
-              ...p,
-              upvotes: (p.upvotes ?? 0) + updelta,
-              downvotes: (p.downvotes ?? 0) + downdelta,
-            }
-      );
-
-    // Update both feeds optimistically
-    setHotPosts((prev) => apply(prev));
-    setRecentPosts((prev) => apply(prev));
-
-    try {
-      // Send the vote to the server
-      await castVote(
-        postId,
-        newVote === "up" ? 1 : newVote === "down" ? -1 : 0
-      );
-    } catch (err) {
-      console.error("Vote failed", err);
-
-      // Revert the optimistic update if the server call fails
-      setUserVotes((prev) => ({ ...prev, [postId]: currentVote }));
-      const revert = (arr: Post[]) =>
-        arr.map((p) =>
-          p.id !== postId
-            ? p
-            : {
-                ...p,
-                upvotes: (p.upvotes ?? 0) - updelta,
-                downvotes: (p.downvotes ?? 0) - downdelta,
-              }
-        );
-      setHotPosts((prev) => revert(prev));
-      setRecentPosts((prev) => revert(prev));
-    }
-  }
-
-  const handleComment = (postId: string) => {
-    // Navigate to comment screen
-    router.push(`/comments/${postId}`);
-  };
-
-  // Show loading state if location is loading
+  // Early returns ONLY after all hooks are declared
   if (!userLocation && locationLoading) {
     return <LoadingIndicator size={60} />;
   }
@@ -733,92 +826,12 @@ export default function FeedTabScreen() {
     );
   }
 
-  const handleClosePopup = async () => {
-    try {
-      await AsyncStorage.setItem("hasSeenWelcome", "true");
-      setShowPopup(false);
-    } catch (error) {
-      console.error("Error saving to AsyncStorage:", error);
-      setShowPopup(false); // Still close even if save fails
-    }
-  };
-
-  const refreshHot = async () => {
-    setRefreshingHot(true);
-    setHotCursor(null);
-    setHotDone(false);
-    setHotPosts([]); // Clear existing posts
-    await loadHot(true);
-    setRefreshingHot(false);
-  };
-
-  const refreshRecent = async () => {
-    setRefreshingRecent(true);
-    setRecentCursor(null);
-    setRecentDone(false);
-    setRecentPosts([]); // Clear existing posts
-    await loadRecent(true);
-    setRefreshingRecent(false);
-  };
-
-  const filteredHot = useMemo(() => {
-    const filtered = filterPostsByDistance(
-      hotPosts,
-      userLocation,
-      MAX_DISTANCE_KM
-    );
-
-    // Sort hot posts by total votes (upvotes - downvotes) in descending order
-    return filtered.sort((a, b) => {
-      const aScore = (a.upvotes || 0) - (a.downvotes || 0);
-      const bScore = (b.upvotes || 0) - (b.downvotes || 0);
-      return bScore - aScore; // Descending order
-    });
-  }, [hotPosts, userLocation]);
-  const filteredRecent = filterPostsByDistance(
-    recentPosts,
-    userLocation,
-    MAX_DISTANCE_KM
-  );
-
+  console.log("[Hot Feed1] :", hotPosts.length);
+  console.log("[Recent Feed1] :", recentPosts.length);
   console.log("[Hot Feed] :", hotPosts.length);
   console.log("[Recent Feed] :", recentPosts.length);
-
   console.log("[Hot Feed] Filtered posts count:", filteredHot.length);
   console.log("[Recent Feed] Filtered posts count:", filteredRecent.length);
-
-  const renderScene = ({ route }: { route: { key: string } }) => {
-    switch (route.key) {
-      case "hot":
-        return (
-          <PostList
-            data={filteredHot}
-            onVote={handleVote}
-            onComment={handleComment}
-            userVotes={userVotes}
-            userLocation={userLocation}
-            onEndReached={() => loadHot()}
-            refreshing={refreshingHot}
-            onRefresh={refreshHot}
-          />
-        );
-      case "recent":
-        return (
-          <PostList
-            data={filteredRecent}
-            onVote={handleVote}
-            onComment={handleComment}
-            userVotes={userVotes}
-            userLocation={userLocation}
-            onEndReached={() => loadRecent()}
-            refreshing={refreshingRecent}
-            onRefresh={refreshRecent}
-          />
-        );
-      default:
-        return null;
-    }
-  };
 
   return (
     <View style={[styles.container, isDarkMode && styles.containerDark]}>

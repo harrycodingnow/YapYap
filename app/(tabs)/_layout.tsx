@@ -1,18 +1,10 @@
+// app/(tabs)/_layout.tsx
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import React from "react";
 import { Platform, View } from "react-native";
 
-function CustomTabBarIcon({
-  focused,
-  color,
-  size,
-}: {
-  focused: boolean;
-  color: string;
-  size?: number;
-}) {
+function PlusIcon({ focused }: { focused: boolean }) {
   return (
     <View
       style={{
@@ -36,14 +28,15 @@ function CustomTabBarIcon({
   );
 }
 
-function TabsContent() {
+export default function TabsLayout() {
   const { isDarkMode } = useDarkMode();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#FDBA74",
         headerShown: false,
+        tabBarActiveTintColor: "#FDBA74",
+        tabBarInactiveTintColor: isDarkMode ? "#9CA3AF" : "#6B7280",
         tabBarShowLabel: true,
         tabBarStyle: Platform.select({
           ios: {
@@ -69,7 +62,6 @@ function TabsContent() {
           },
           default: {},
         }),
-        tabBarInactiveTintColor: isDarkMode ? "#9CA3AF" : "#6B7280",
       }}
     >
       <Tabs.Screen
@@ -85,7 +77,7 @@ function TabsContent() {
         name="create"
         options={{
           tabBarLabel: "",
-          tabBarIcon: (props) => <CustomTabBarIcon {...props} />,
+          tabBarIcon: ({ focused }) => <PlusIcon focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -99,8 +91,4 @@ function TabsContent() {
       />
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  return <TabsContent />;
 }

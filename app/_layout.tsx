@@ -1,12 +1,11 @@
 // app/_layout.tsx
-import "react-native-reanimated";
-
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DarkModeProvider } from "@/contexts/DarkModeContext";
 import { LocationProvider } from "@/contexts/LocationContext";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+import "react-native-reanimated";
 import i18n, { getSavedLanguage } from "../contexts/i18n";
 
 export default function RootLayout() {
@@ -15,10 +14,8 @@ export default function RootLayout() {
   useEffect(() => {
     (async () => {
       const saved = await getSavedLanguage();
-      const lang = saved ?? "zh"; // ✅ default to Chinese
-      if (lang !== i18n.language) {
-        await i18n.changeLanguage(lang);
-      }
+      const lang = saved ?? "zh";
+      if (lang !== i18n.language) await i18n.changeLanguage(lang);
       setLangReady(true);
     })();
   }, []);
@@ -35,7 +32,7 @@ export default function RootLayout() {
     <AuthProvider>
       <DarkModeProvider>
         <LocationProvider>
-          <Slot />
+          <Stack screenOptions={{ headerShown: false }} />
         </LocationProvider>
       </DarkModeProvider>
     </AuthProvider>

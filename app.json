@@ -2,15 +2,15 @@
   "expo": {
     "name": "Yapyap",
     "slug": "Yapyap",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "yapyap",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "bundleIdentifier": "com.harry.yapyap",
-      "buildNumber": "1.0.4",
+      "buildNumber": "1.1.0",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -18,43 +18,38 @@
         "NSUserNotificationUsageDescription": "To alert you about replies and activity."
       }
     },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
+      "router": {},
       "eas": {
         "projectId": "65117c14-8d88-4cc1-8399-8c03fd2e9376"
       }
-    }
-  },
-  "android": {
-    "adaptiveIcon": {
-      "foregroundImage": "./assets/images/adaptive-icon.png",
-      "backgroundColor": "#ffffff"
-    },
-    "edgeToEdgeEnabled": true
-  },
-  "web": {
-    "bundler": "metro",
-    "output": "static",
-    "favicon": "./assets/images/favicon.png"
-  },
-  "plugins": [
-    "expo-router",
-    [
-      "expo-splash-screen",
-      {
-        "image": "./assets/images/splash-icon.png",
-        "imageWidth": 200,
-        "resizeMode": "contain",
-        "backgroundColor": "#ffffff"
-      }
-    ]
-  ],
-  "experiments": {
-    "typedRoutes": true
-  },
-  "extra": {
-    "router": {},
-    "eas": {
-      "projectId": "65117c14-8d88-4cc1-8399-8c03fd2e9376"
     }
   }
 }
