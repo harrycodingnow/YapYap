@@ -13,8 +13,8 @@
   "profile.switchToChinese": "切換為繁體中文",
   "profile.switchToEnglish": "切換為英文",
   "profile.resetIdentity": "重設匿名身份",
-  "profile.resetConfirmTitle": "你確定嗎？",
-  "profile.resetConfirmBody": "這將永久刪除你所有的貼文與資料。此操作無法復原。",
+  "profile.resetconfirmationTitle": "你確定嗎？",
+  "profile.resetconfirmationBody": "這將永久刪除你所有的貼文與資料。此操作無法復原。",
   "profile.resetCancel": "取消",
   "profile.resetDelete": "永久刪除",
   "profile.resetComplete": "重設完成",
@@ -26,6 +26,7 @@
 
   "feed.title": "Yapyap",
   "feed.subtitle": "5 公里內發生了什麼事",
+  "feed.subtitle2": "貼文將在 24 小時後自動消失（即將上線！）",
   "feed.empty.title": "附近沒有貼文",
   "feed.empty.subtitle": "你 5 公里範圍內尚無貼文。\n成為第一個發文的人吧!",
   "feed.tab.hot": "熱門",
@@ -45,6 +46,8 @@
   "common.retry": "重試",
   "common.noLocation": "無法取得位置資料",
   "common.getLocation": "獲取位置",
+  "common.ok": "確定",
+  "common.cancel": "取消",
 
   "comments.title": "留言",
   "comments.placeholder": "寫留言...",
@@ -73,5 +76,40 @@
   "about.version": "版本：",
   "about.credits": "感謝這些神操作",
   "about.creditsText": "Yapyap 是由一個熱愛匿名社交的開發者打造的，感謝所有參與者的努力和創意！",
-  "about.close": "關閉"
+  "about.close": "關閉",
+  "about.contactInformation": "聯絡資訊",
+  "about.contactEmail": "yapyap2026@gmail.com",
+
+  "confirmation.title": "需要確認",
+  "confirmation.ageVerification": "我確認我已年滿 18 歲",
+  "confirmation.termsText": "我同意 ",
+  "confirmation.termsLink": "服務條款",
+  "confirmation.and": " 和 ",
+  "confirmation.privacyLink": "隱私權政策",
+  "confirmation.cancel": "取消",
+  "confirmation.confirm": "確認",
+
+  "safety.title": "檢舉內容",
+  "safety.flag": "檢舉貼文",
+  "safety.block": "封鎖使用者",
+  "safety.hide": "隱藏貼文",
+  "safety.flagReason": "你為什麼要檢舉？",
+  "safety.reasons.spam": "垃圾訊息",
+  "safety.reasons.harassment": "騷擾／霸凌",
+  "safety.reasons.inappropriate": "不當內容",
+  "safety.reasons.misinformation": "錯誤／不實資訊",
+  "safety.reasons.other": "其他",
+
+  "safety.flagSuccess.title": "已送出檢舉",
+  "safety.flagSuccess.message": "感謝你的回報，我們會盡速審查。",
+  "safety.flagError": "檢舉失敗，請稍後再試。",
+
+  "safety.blockConfirm.title": "封鎖使用者",
+  "safety.blockConfirm.message": "你將不會再看到此使用者的貼文。此動作無法復原。",
+  "safety.blockSuccess.title": "已封鎖",
+  "safety.blockSuccess.message": "你將不會再看到此使用者的貼文。",
+  "safety.blockError": "封鎖失敗，請稍後再試。",
+
+  "safety.hideSuccess.title": "已隱藏貼文",
+  "safety.hideSuccess.message": "此貼文已從你的動態中移除。"
 }

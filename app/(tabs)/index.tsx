@@ -17,11 +17,13 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Alert,
   FlatList,
   Platform,
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -32,6 +34,13 @@ import { useLocation } from "../../contexts/LocationContext";
 import { db } from "../../firebase";
 import { fetchLatestPostsPage, fetchTopPostsPage } from "../../services/posts";
 import { getDistanceKm } from "../../utils";
+import AgeTermsConditionsPopupModal from "../components/ageTermsConditionsPopUpModal";
+import {
+  type FlagReason,
+  FlagReasonModal,
+  type SafetyAction,
+  SafetyActionModal,
+} from "../components/SafetyActionModal";
 import WelcomePopup from "../components/welcomePopUpModal";
 
 const MAX_DISTANCE_KM = 5;
@@ -45,6 +54,7 @@ type Post = {
   lat?: number;
   lng?: number;
   commentCount?: number;
+  authorId?: string; // Added for user blocking
 };
 
 type VoteType = "up" | "down" | null;
@@ -83,6 +93,7 @@ function filterPostsByDistance(
     return distance <= maxDistance;
   });
 }
+
 const deduplicatePosts = (posts: Post[]): Post[] => {
   const seen = new Set();
   return posts.filter((post) => {
@@ -210,17 +221,10 @@ const LoadingIndicator = ({ size }: { size: number }) => {
       >
         {t("common.loading1")}
       </Text>
-      {/* <Text
-        style={[
-          { fontSize: 16, marginTop: 20, textAlign: "center" },
-          isDarkMode ? { color: "#9CA3AF" } : { color: "#6B7280" },
-        ]}
-      >
-        {t("common.loading2")}
-      </Text> */}
     </View>
   );
 };
+
 const PostList = ({
   data,
   onVote,
@@ -230,6 +234,8 @@ const PostList = ({
   onEndReached,
   onRefresh,
   refreshing = false,
+  onSafetyAction,
+  hiddenPosts,
 }: {
   data: Post[];
   onVote: (id: string, voteType: VoteType) => void;
@@ -239,10 +245,17 @@ const PostList = ({
   onEndReached?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onSafetyAction: (postId: string, action: SafetyAction) => void;
+  hiddenPosts: Set<string>;
 }) => {
   const { isDarkMode } = useDarkMode();
   const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
+
+  // Filter out hidden posts
+  const visibleData = useMemo(() => {
+    return data.filter((post) => !hiddenPosts.has(post.id));
+  }, [data, hiddenPosts]);
 
   // Empty state component
   const EmptyState = () => (
@@ -278,7 +291,7 @@ const PostList = ({
 
   return (
     <FlatList
-      data={data}
+      data={visibleData}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => {
         const distance =
@@ -293,6 +306,7 @@ const PostList = ({
         const userVote = userVotes[item.id] || null;
         const displayUpvotes = item.upvotes ?? 0;
         const displayDownvotes = item.downvotes ?? 0;
+
         return (
           <Pressable
             onPress={() => onComment(item.id)}
@@ -305,11 +319,30 @@ const PostList = ({
               ]}
             >
               <View style={styles.postContent}>
-                <Text
-                  style={[styles.postText, isDarkMode && styles.postTextDark]}
-                >
-                  {item.text}
-                </Text>
+                <View style={styles.postHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        styles.postText,
+                        isDarkMode && styles.postTextDark,
+                      ]}
+                    >
+                      {item.text}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.menuButton}
+                    onPress={() => onSafetyAction(item.id, "flag")}
+                    hitSlop={10}
+                  >
+                    <Ionicons
+                      name="ellipsis-horizontal"
+                      size={20}
+                      color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+                    />
+                  </TouchableOpacity>
+                </View>
+
                 <View style={styles.footerGroup}>
                   <View style={styles.postMeta}>
                     <View style={styles.metaRow}>
@@ -434,8 +467,7 @@ const PostList = ({
       contentContainerStyle={[
         styles.listContainer,
         { paddingBottom: tabBarHeight + 16 },
-
-        data.length === 0 && { flex: 1 },
+        visibleData.length === 0 && { flex: 1 },
       ]}
       showsVerticalScrollIndicator={false}
       ItemSeparatorComponent={() => (
@@ -450,11 +482,13 @@ const PostList = ({
     />
   );
 };
+
 export default function FeedTabScreen() {
   // All hooks must be declared at the top level, unconditionally
   const isFocused = useIsFocused();
   const locationFetchedRef = useRef(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [showAgeModal, setShowAgeModal] = useState(false);
   const layout = useWindowDimensions();
   const { user, primaryUserId } = useAuth();
   const router = useRouter();
@@ -480,6 +514,13 @@ export default function FeedTabScreen() {
   const [refreshingHot, setRefreshingHot] = useState(false);
   const [refreshingRecent, setRefreshingRecent] = useState(false);
 
+  // New state for safety features
+  const [safetyModalVisible, setSafetyModalVisible] = useState(false);
+  const [flagModalVisible, setFlagModalVisible] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [hiddenPosts, setHiddenPosts] = useState<Set<string>>(new Set());
+  const [blockedUsers, setBlockedUsers] = useState<Set<string>>(new Set());
+
   // Custom hooks
   const {
     location: userLocation,
@@ -504,17 +545,162 @@ export default function FeedTabScreen() {
       MAX_DISTANCE_KM
     );
 
+    // Filter out blocked users
+    const unblockedFiltered = filtered.filter(
+      (post) => !post.authorId || !blockedUsers.has(post.authorId)
+    );
+
     // Sort hot posts by total votes (upvotes - downvotes) in descending order
-    return filtered.sort((a, b) => {
+    return unblockedFiltered.sort((a, b) => {
       const aScore = (a.upvotes || 0) - (a.downvotes || 0);
       const bScore = (b.upvotes || 0) - (b.downvotes || 0);
       return bScore - aScore; // Descending order
     });
-  }, [hotPosts, userLocation]);
+  }, [hotPosts, userLocation, blockedUsers]);
 
   const filteredRecent = useMemo(() => {
-    return filterPostsByDistance(recentPosts, userLocation, MAX_DISTANCE_KM);
-  }, [recentPosts, userLocation]);
+    const filtered = filterPostsByDistance(
+      recentPosts,
+      userLocation,
+      MAX_DISTANCE_KM
+    );
+
+    // Filter out blocked users
+    return filtered.filter(
+      (post) => !post.authorId || !blockedUsers.has(post.authorId)
+    );
+  }, [recentPosts, userLocation, blockedUsers]);
+
+  // Safety action handlers
+  const handleSafetyAction = useCallback(
+    (postId: string, action: SafetyAction) => {
+      setSelectedPostId(postId);
+
+      if (action === "flag") {
+        setSafetyModalVisible(true);
+      }
+    },
+    []
+  );
+
+  const handleFlag = useCallback(() => {
+    setSafetyModalVisible(false);
+    setFlagModalVisible(true);
+  }, []);
+
+  const handleFlagSubmit = useCallback(
+    async (reason: FlagReason) => {
+      if (!selectedPostId || !user) return;
+
+      setFlagModalVisible(false);
+
+      try {
+        // await flagContent(selectedPostId, reason, user.uid);
+
+        Alert.alert(
+          t("safety.flagSuccess.title", "Content Reported"),
+          t(
+            "safety.flagSuccess.message",
+            "Thank you for your report. We'll review this content shortly."
+          ),
+          [{ text: t("common.ok", "OK") }]
+        );
+      } catch (error) {
+        console.error("Failed to flag content:", error);
+        Alert.alert(
+          t("common.error", "Error"),
+          t("safety.flagError", "Failed to report content. Please try again."),
+          [{ text: t("common.ok", "OK") }]
+        );
+      } finally {
+        setSelectedPostId(null);
+      }
+    },
+    [selectedPostId, user, t]
+  );
+
+  const handleBlock = useCallback(async () => {
+    if (!selectedPostId || !user) return;
+
+    setSafetyModalVisible(false);
+    setHiddenPosts((prev) => new Set([...prev, selectedPostId]));
+    // Find the post to get the author ID
+    const post = [...hotPosts, ...recentPosts].find(
+      (p) => p.id === selectedPostId
+    );
+    if (!post?.authorId) {
+      setSelectedPostId(null);
+      return;
+    }
+
+    Alert.alert(
+      t("safety.blockConfirm.title", "Block User"),
+      t(
+        "safety.blockConfirm.message",
+        "You won't see posts from this user anymore. This action cannot be undone."
+      ),
+      [
+        {
+          text: t("common.cancel", "Cancel"),
+          style: "cancel",
+          onPress: () => setSelectedPostId(null),
+        },
+        {
+          text: t("safety.block", "Block"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // await blockUser(post.authorId!, user.uid);
+
+              // Add to blocked users set
+              setBlockedUsers((prev) => new Set([...prev, post.authorId!]));
+
+              Alert.alert(
+                t("safety.blockSuccess.title", "User Blocked"),
+                t(
+                  "safety.blockSuccess.message",
+                  "You will no longer see posts from this user."
+                ),
+                [{ text: t("common.ok", "OK") }]
+              );
+            } catch (error) {
+              console.error("Failed to block user:", error);
+              Alert.alert(
+                t("common.error", "Error"),
+                t(
+                  "safety.blockError",
+                  "Failed to block user. Please try again."
+                ),
+                [{ text: t("common.ok", "OK") }]
+              );
+            } finally {
+              setSelectedPostId(null);
+            }
+          },
+        },
+      ]
+    );
+  }, [selectedPostId, user, hotPosts, recentPosts, t]);
+
+  const handleHide = useCallback(() => {
+    if (!selectedPostId) return;
+
+    setSafetyModalVisible(false);
+
+    // Add to hidden posts set
+    setHiddenPosts((prev) => new Set([...prev, selectedPostId]));
+
+    Alert.alert(
+      t("safety.hideSuccess.title", "Post Hidden"),
+      t(
+        "safety.hideSuccess.message",
+        "This post has been removed from your feed."
+      ),
+      [{ text: t("common.ok", "OK") }]
+    );
+
+    setSelectedPostId(null);
+  }, [selectedPostId, t]);
 
   // Callback functions
   const normalize = useCallback(
@@ -656,6 +842,21 @@ export default function FeedTabScreen() {
     }
   }, []);
 
+  const handleAgeConfirmed = async () => {
+    try {
+      await AsyncStorage.setItem("hasAcceptedAgeTerms", "true");
+      setShowAgeModal(false);
+
+      const hasSeenWelcome = await AsyncStorage.getItem("hasSeenWelcome");
+      if (hasSeenWelcome === null) {
+        setShowPopup(true);
+      }
+    } catch (err) {
+      console.error("Failed to save age/terms acceptance:", err);
+      setShowAgeModal(false);
+    }
+  };
+
   const refreshHot = useCallback(async () => {
     setRefreshingHot(true);
     setHotCursor(null);
@@ -680,6 +881,13 @@ export default function FeedTabScreen() {
   useEffect(() => {
     const checkFirstLaunch = async () => {
       try {
+        const hasAcceptedAge = await AsyncStorage.getItem(
+          "hasAcceptedAgeTerms"
+        );
+        if (!hasAcceptedAge) {
+          setShowAgeModal(true); // Show age/terms modal first
+          return;
+        }
         const hasSeenWelcome = await AsyncStorage.getItem("hasSeenWelcome");
         if (hasSeenWelcome === null) {
           setShowPopup(true);
@@ -769,6 +977,8 @@ export default function FeedTabScreen() {
               onEndReached={() => loadHot()}
               refreshing={refreshingHot}
               onRefresh={refreshHot}
+              onSafetyAction={handleSafetyAction}
+              hiddenPosts={hiddenPosts}
             />
           );
         case "recent":
@@ -782,6 +992,8 @@ export default function FeedTabScreen() {
               onEndReached={() => loadRecent()}
               refreshing={refreshingRecent}
               onRefresh={refreshRecent}
+              onSafetyAction={handleSafetyAction}
+              hiddenPosts={hiddenPosts}
             />
           );
         default:
@@ -801,6 +1013,8 @@ export default function FeedTabScreen() {
       refreshingRecent,
       refreshHot,
       refreshRecent,
+      handleSafetyAction,
+      hiddenPosts,
     ]
   );
 
@@ -863,6 +1077,38 @@ export default function FeedTabScreen() {
             }
           />
         )}
+      />
+
+      {/* Safety Action Modal */}
+      <SafetyActionModal
+        visible={safetyModalVisible}
+        onClose={() => {
+          setSafetyModalVisible(false);
+          setSelectedPostId(null);
+        }}
+        onFlag={handleFlag}
+        onBlock={handleBlock}
+        onHide={handleHide}
+        isDarkMode={isDarkMode}
+        t={t}
+      />
+
+      {/* Flag Reason Modal */}
+      <FlagReasonModal
+        visible={flagModalVisible}
+        onClose={() => {
+          setFlagModalVisible(false);
+          setSelectedPostId(null);
+        }}
+        onSubmit={handleFlagSubmit}
+        isDarkMode={isDarkMode}
+        t={t}
+      />
+
+      <AgeTermsConditionsPopupModal
+        visible={showAgeModal}
+        onConfirm={handleAgeConfirmed}
+        onClose={() => setShowAgeModal(false)} // Optional fallback
       />
       <WelcomePopup visible={showPopup} onClose={handleClosePopup} />
     </View>
@@ -986,6 +1232,15 @@ const styles = StyleSheet.create({
     marginRight: 16,
     justifyContent: "space-between",
   },
+  postHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  menuButton: {
+    padding: 4,
+    marginTop: -4,
+  },
   footerGroup: {
     marginTop: "auto",
     gap: 6,
@@ -995,7 +1250,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#111827",
     lineHeight: 22,
-    marginBottom: 8,
   },
   postTextDark: {
     color: "#F9FAFB",
@@ -1139,5 +1393,130 @@ const styles = StyleSheet.create({
   },
   emptyStateSubtitleDark: {
     color: "#9CA3AF",
+  },
+
+  // Safety Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  safetyModal: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 20,
+    width: "100%",
+    maxWidth: 320,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  safetyModalDark: {
+    backgroundColor: "#1F2937",
+  },
+  safetyModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  safetyModalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  safetyModalTitleDark: {
+    color: "#F9FAFB",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  safetyActions: {
+    gap: 12,
+  },
+  safetyActionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  safetyActionItemDark: {
+    backgroundColor: "#374151",
+    borderColor: "#4B5563",
+  },
+  safetyActionText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#111827",
+    flex: 1,
+  },
+  safetyActionTextDark: {
+    color: "#F9FAFB",
+  },
+
+  // Flag Modal Styles
+  flagModal: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 20,
+    width: "100%",
+    maxWidth: 360,
+    maxHeight: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  flagModalDark: {
+    backgroundColor: "#1F2937",
+  },
+  flagModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  flagModalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#111827",
+    flex: 1,
+  },
+  flagModalTitleDark: {
+    color: "#F9FAFB",
+  },
+  flagReasons: {
+    gap: 8,
+  },
+  flagReasonItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  flagReasonItemDark: {
+    backgroundColor: "#374151",
+    borderColor: "#4B5563",
+  },
+  flagReasonText: {
+    fontSize: 16,
+    color: "#111827",
+    flex: 1,
+  },
+  flagReasonTextDark: {
+    color: "#F9FAFB",
   },
 });

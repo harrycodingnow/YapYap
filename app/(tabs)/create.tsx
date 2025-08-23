@@ -38,6 +38,71 @@ import { useDarkMode } from "../../contexts/DarkModeContext";
 import { useLocation } from "../../contexts/LocationContext";
 import { db } from "../../firebase";
 
+// Banned keywords list - add or modify as needed
+const BANNED_KEYWORDS = [
+  // English profanity and inappropriate content
+  "fuck",
+  "shit",
+  "damn",
+  "bitch",
+  "asshole",
+  "bastard",
+  "crap",
+  "piss",
+  "cock",
+  "dick",
+  "pussy",
+  "tits",
+  "boobs",
+  "ass",
+  "sex",
+  "porn",
+  "nude",
+  "naked",
+  "kill",
+  "murder",
+  "die",
+  "death",
+  "suicide",
+  "hate",
+  "nazi",
+  "terrorist",
+  "bomb",
+  "gun",
+  "weapon",
+  "drug",
+  "cocaine",
+  "weed",
+  "marijuana",
+
+  // Chinese inappropriate content (examples - add more as needed)
+  "操",
+  "媽的",
+  "傻逼",
+  "白痴",
+  "蠢货",
+  "死",
+  "殺",
+  "毒品",
+  "色情",
+  "裸體",
+  "性",
+  "黄色",
+  "恐怖",
+  "炸弹",
+  "武器",
+  "大麻",
+
+  // Additional categories you might want to ban
+  "spam",
+  "scam",
+  "fraud",
+  "fake",
+  "lie",
+  "cheat",
+  "steal",
+];
+
 function getRegionForRadius(
   lat: number,
   lng: number,
@@ -104,6 +169,14 @@ function getLanguageType(text: string): string {
   }
 }
 
+// Function to check if text contains banned keywords
+function containsBannedWords(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return BANNED_KEYWORDS.some((keyword) =>
+    lowerText.includes(keyword.toLowerCase())
+  );
+}
+
 const LoadingIndicator = ({ size }: { size: number }) => {
   const { isDarkMode } = useDarkMode();
   const { t } = useTranslation();
@@ -167,6 +240,9 @@ export default function CreatePostScreen() {
   const isNearLimit = charactersRemaining <= 20;
   const isOverLimit = charactersRemaining < 0;
 
+  // Check for banned words
+  const hasBannedWords = containsBannedWords(text);
+
   const darkMapStyle = [
     { elementType: "geometry", stylers: [{ color: "#212121" }] },
     { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -218,7 +294,14 @@ export default function CreatePostScreen() {
   };
 
   const handlePost = async () => {
-    if (!text.trim() || !location || !user || !primaryUserId || isOverLimit)
+    if (
+      !text.trim() ||
+      !location ||
+      !user ||
+      !primaryUserId ||
+      isOverLimit ||
+      hasBannedWords
+    )
       return;
 
     setPosting(true);
@@ -453,7 +536,7 @@ export default function CreatePostScreen() {
               style={[
                 styles.input,
                 isDarkMode && styles.inputDark,
-                isOverLimit && styles.inputError,
+                (isOverLimit || hasBannedWords) && styles.inputError,
               ]}
               placeholder={t("create.placeholder")}
               placeholderTextColor={isDarkMode ? "#6B7280" : "#9CA3AF"}
@@ -487,6 +570,13 @@ export default function CreatePostScreen() {
                 {text.length}/{currentLimit}
               </Text>
             </View>
+
+            {/* Bad words warning */}
+            {hasBannedWords && (
+              <Text style={styles.badWordsWarning}>
+                Post contains inappropriate content
+              </Text>
+            )}
           </View>
 
           <Pressable
@@ -494,13 +584,19 @@ export default function CreatePostScreen() {
               styles.button,
               isDarkMode && styles.buttonDark,
               (pressed || posting) && styles.buttonPressed,
-              (!text.trim() || !location || isOverLimit) &&
+              (!text.trim() || !location || isOverLimit || hasBannedWords) &&
                 (isDarkMode
                   ? styles.buttonDisabledDark
                   : styles.buttonDisabled),
             ]}
             onPress={handlePost}
-            disabled={posting || !text.trim() || !location || isOverLimit}
+            disabled={
+              posting ||
+              !text.trim() ||
+              !location ||
+              isOverLimit ||
+              hasBannedWords
+            }
             accessibilityRole="button"
             accessibilityLabel="Post"
           >
@@ -694,6 +790,14 @@ const styles = StyleSheet.create({
   },
   characterCountError: {
     color: "#EF4444",
+  },
+  badWordsWarning: {
+    color: "#EF4444",
+    fontSize: 14,
+    fontWeight: "500",
+    marginTop: 8,
+    paddingHorizontal: 4,
+    textAlign: "left",
   },
   button: {
     backgroundColor: "#FDBA74",

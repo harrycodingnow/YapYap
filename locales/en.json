@@ -13,8 +13,8 @@
   "profile.switchToChinese": "Switch to 中文",
   "profile.switchToEnglish": "Switch to English",
   "profile.resetIdentity": "Reset Anonymous Identity",
-  "profile.resetConfirmTitle": "Are you sure?",
-  "profile.resetConfirmBody": "This will delete all your posts and data permanently. This action cannot be undone.",
+  "profile.resetconfirmationTitle": "Are you sure?",
+  "profile.resetconfirmationBody": "This will delete all your posts and data permanently. This action cannot be undone.",
   "profile.resetCancel": "Cancel",
   "profile.resetDelete": "Delete Everything",
   "profile.resetComplete": "Reset Complete",
@@ -44,6 +44,11 @@
   "common.loading2": "More information in ⓘ beside Header",
   "common.error": "An error occurred",
   "common.retry": "Retry",
+  "common.noLocation": "No location data available",
+  "common.getLocation": "Get Location",
+  "common.ok": "OK",
+  "common.cancel": "Cancel",
+
   "comments.title": "Comments",
   "comments.placeholder": "Write a comment...",
   "comments.emptyTitle": "No comments yet",
@@ -52,8 +57,6 @@
   "comments.votes": "votes",
   "comments.errorTitle": "Error",
   "comments.errorBody": "Failed to post comment. Please try again.",
-  "common.noLocation": "No location data available",
-  "common.getLocation": "Get Location",
 
   "welcome.title": "Welcome to Yapyap!",
   "welcome.bullet1": "Posts (Yaps) are visible to nearby users within 5 km.",
@@ -73,5 +76,40 @@
   "about.version": "Version: ",
   "about.credits": "Made with luv type shi",
   "about.creditsText": "Built by Me, Myself and I, u heard.",
-  "about.close": "Close"
+  "about.close": "Close",
+  "about.contactInformation": "Contact Information",
+  "about.contactEmail": "yapyap2026@gmail.com",
+
+  "confirmation.title": "Confirmationation Required",
+  "confirmation.ageVerification": "I confirm that I am at least 18 years old",
+  "confirmation.termsText": "I agree to the ",
+  "confirmation.termsLink": "Terms of Service",
+  "confirmation.and": " and ",
+  "confirmation.privacyLink": "Privacy Policy",
+  "confirmation.cancel": "Cancel",
+  "confirmation.confirm": "Confirm",
+
+  "safety.title": "Report Content",
+  "safety.flag": "Flag Content",
+  "safety.block": "Block User",
+  "safety.hide": "Hide Post",
+  "safety.flagReason": "Why are you reporting this?",
+  "safety.reasons.spam": "Spam",
+  "safety.reasons.harassment": "Harassment",
+  "safety.reasons.inappropriate": "Inappropriate Content",
+  "safety.reasons.misinformation": "Misinformation",
+  "safety.reasons.other": "Other",
+
+  "safety.flagSuccess.title": "Content Reported",
+  "safety.flagSuccess.message": "Thank you for your report. We'll review this content shortly.",
+  "safety.flagError": "Failed to report content. Please try again.",
+
+  "safety.blockConfirm.title": "Block User",
+  "safety.blockConfirm.message": "You won't see posts from this user anymore. This action cannot be undone.",
+  "safety.blockSuccess.title": "User Blocked",
+  "safety.blockSuccess.message": "You will no longer see posts from this user.",
+  "safety.blockError": "Failed to block user. Please try again.",
+
+  "safety.hideSuccess.title": "Post Hidden",
+  "safety.hideSuccess.message": "This post has been removed from your feed."
 }

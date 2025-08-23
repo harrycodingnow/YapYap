@@ -1,15 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
   Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useTranslation } from "react-i18next";
 
 interface AboutModalProps {
   visible: boolean;
@@ -155,6 +155,41 @@ export default function AboutModal({
                   ]}
                 >
                   {t("about.creditsText")}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <View
+                style={[
+                  styles.sectionCard,
+                  isDarkMode && styles.sectionCardDark,
+                ]}
+              >
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIconContainer}>
+                    <Ionicons
+                      name="accessibility-outline"
+                      size={18}
+                      color="black"
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.sectionTitle,
+                      isDarkMode && styles.sectionTitleDark,
+                    ]}
+                  >
+                    {t("about.contactInformation")}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.description,
+                    isDarkMode && styles.descriptionDark,
+                  ]}
+                >
+                  {t("about.contactEmail")}
                 </Text>
               </View>
             </View>
