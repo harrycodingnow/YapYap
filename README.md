@@ -1,4 +1,4 @@
-
+# Yapyap 📱
 
 Yapyap is a side project I built over the summer.
 It started as an attempt to **recreate the vibe of YikYak (a popular anonymous app in the U.S.)**, but redesigned and localized for students in Taiwan.
@@ -9,8 +9,7 @@ The idea is simple:
 - 💬 Share gossip, ask questions, find activities, or just vent freely
 - 🙈 100% anonymous — no real identity required
 
-  <img width="1280" height="671" alt="image" src="https://github.com/user-attachments/assets/72966ab9-ebe4-4ba3-a356-12bffd9413a9" />
-
+  ![App Screenshot](./assets/images/1280.webp)
 
 ---
 
@@ -19,13 +18,7 @@ The idea is simple:
 - 🚀 Uploaded to the Apple App Store
 - 🎉 Reached **#90 in the Social Media category** shortly after launch
 
-<p float="left">
-  <img src="https://github.com/user-attachments/assets/5a27923f-cd61-4a7e-806b-5ea7f5c90b2a" width="300" alt="App screenshot 1" />
-  <img src="https://github.com/user-attachments/assets/ce9af6b9-3a95-4d3a-9690-a78f66f8fe7e" width="300" alt="App screenshot 2" />
-</p>
-
-
-
+  ![App Screenshot](./assets/images/screenshots.png)
 
 ---
 
