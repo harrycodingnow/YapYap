@@ -9,7 +9,8 @@ The idea is simple:
 - 💬 Share gossip, ask questions, find activities, or just vent freely
 - 🙈 100% anonymous — no real identity required
 
-  ![App Screenshot](https://file+.vscode-resource.vscode-cdn.net/Users/harryhou/Desktop/Yapyap/assets/images/screenshots.png)
+  <img width="1280" height="671" alt="image" src="https://github.com/user-attachments/assets/72966ab9-ebe4-4ba3-a356-12bffd9413a9" />
+
 
 ---
 
@@ -18,7 +19,8 @@ The idea is simple:
 - 🚀 Uploaded to the Apple App Store
 - 🎉 Reached **#90 in the Social Media category** shortly after launch
 
-  ![App Screenshot](./assets/images/screenshots.png)
+  ![Uploading image.png…]()
+
 
 ---
 
