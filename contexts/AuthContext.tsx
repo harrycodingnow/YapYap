@@ -2,8 +2,9 @@
 import { onAuthStateChanged, signInAnonymously, User } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { Alert } from "react-native";
 import { auth, db } from "../firebase";
-
+import { registerForPushAndSaveToken } from "../services/notifications";
 interface AuthContextType {
   user: User | null;
   primaryUserId: string | null;
@@ -74,9 +75,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setUser(user);
           setError(null);
 
+          if (user) {
+            console.log(
+              "User logged in, registering for push notifications..."
+            );
+            registerForPushAndSaveToken().then((token) => {
+              if (token) {
+                console.log("🔥 COPY THIS TOKEN:", token);
+
+                // Show alert so you can easily copy the token
+                Alert.alert(
+                  "Push Token Ready!",
+                  `Token: ${token.substring(0, 50)}...`,
+                  [
+                    {
+                      text: "Copy Full Token",
+                      onPress: () => console.log("FULL TOKEN:", token),
+                    },
+                    { text: "OK" },
+                  ]
+                );
+              }
+            });
+          }
+
           // Create/update user document directly
           await createOrUpdateUserDocument(user);
-
+          registerForPushAndSaveToken();
           console.log("✅ Auth setup complete");
         } else {
           console.log("🔄 No user, attempting anonymous sign in...");

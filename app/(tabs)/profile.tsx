@@ -409,6 +409,7 @@ export default function ProfileScreen() {
         {/* Actions */}
         <View style={styles.actionsSection}>
           {/* Language Toggle Button */}
+
           <TouchableOpacity
             style={[styles.actionBtn, isDarkMode && styles.actionBtnDark]}
             onPress={toggleLanguage}
@@ -416,7 +417,7 @@ export default function ProfileScreen() {
             <Ionicons
               name="language-outline"
               size={18}
-              color={isDarkMode ? "#F9FAFB" : "black"}
+              color={isDarkMode ? "#52585eff" : "black"}
               style={{ marginRight: 8 }}
             />
             <Text

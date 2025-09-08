@@ -1,4 +1,3 @@
-// app/_layout.tsx
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DarkModeProvider } from "@/contexts/DarkModeContext";
 import { LocationProvider } from "@/contexts/LocationContext";
@@ -7,6 +6,9 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 import i18n, { getSavedLanguage } from "../contexts/i18n";
+
+// Import notification functions
+import { setupNotificationListeners } from "@/services/notifications";
 
 export default function RootLayout() {
   const [langReady, setLangReady] = useState(false);
@@ -18,6 +20,14 @@ export default function RootLayout() {
       if (lang !== i18n.language) await i18n.changeLanguage(lang);
       setLangReady(true);
     })();
+  }, []);
+
+  // Setup notification listeners when app loads (registration handled after login)
+  useEffect(() => {
+    const subscription = setupNotificationListeners();
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   if (!langReady) {

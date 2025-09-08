@@ -1,50 +1,42 @@
-# Welcome to your Expo app 👋
+# Yapyap 📱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Yapyap is a side project I built over the summer.
+It started as an attempt to **recreate the vibe of YikYak (a popular anonymous app in the U.S.)**, but redesigned and localized for students in Taiwan.
 
-## Get started
+The idea is simple:
 
-1. Install dependencies
+- 📍 Posts are only visible to people within a 5 km radius
+- 💬 Share gossip, ask questions, find activities, or just vent freely
+- 🙈 100% anonymous — no real identity required
 
-   ```bash
-   npm install
-   ```
+  ![App Screenshot](https://file+.vscode-resource.vscode-cdn.net/Users/harryhou/Desktop/Yapyap/assets/images/screenshots.png)
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## 📈 Milestone
 
-In the output, you'll find options to open the app in a
+- 🚀 Uploaded to the Apple App Store
+- 🎉 Reached **#90 in the Social Media category** shortly after launch
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+  ![App Screenshot](./assets/images/screenshots.png)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 🌏 Why Yapyap?
 
-When you're ready, run:
+Taiwan doesn’t really have a hyper-local, anonymous, location-based community app.
+Most platforms (like IG, FB, or Dcard) are either identity-based or too broad.
 
-```bash
-npm run reset-project
-```
+Yapyap is meant to fill that gap:
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- A lightweight, instant campus/community forum
+- Local-only conversations
+- A fun, pressure-free space to see what people _around you_ are saying
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 🔗 Download
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+👉 [App Store Link](https://apps.apple.com/tw/app/yapyap-%E5%8D%B3%E6%99%82%E5%8C%BF%E5%90%8D%E7%A4%BE%E7%BE%A4-%E9%99%90%E5%AE%9A-5-%E5%85%AC%E9%87%8C/id6751183691?l=en-GB)
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---

@@ -249,16 +249,21 @@ export default function CommentScreen() {
           </View>
 
           {/* Content */}
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <TouchableWithoutFeedback
+            onPress={Keyboard.dismiss}
+            accessible={false}
+          >
             <View style={styles.content}>
               <FlatList
+                style={{ flex: 1 }}
                 data={comments}
                 keyExtractor={(item) => item.id}
                 renderItem={renderComment}
                 ListEmptyComponent={loading ? null : renderEmpty()}
-                contentContainerStyle={styles.listContainer}
-                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContainer} // see style tweak below
+                showsVerticalScrollIndicator
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
               />
             </View>
           </TouchableWithoutFeedback>
@@ -400,7 +405,6 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
-    flexGrow: 1,
   },
   commentItem: {
     backgroundColor: "#FFFFFF",
