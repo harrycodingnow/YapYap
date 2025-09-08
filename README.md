@@ -18,7 +18,10 @@ The idea is simple:
 - 🚀 Uploaded to the Apple App Store
 - 🎉 Reached **#90 in the Social Media category** shortly after launch
 
-  ![App Screenshot](./assets/images/screenshots.png)
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/5a27923f-cd61-4a7e-806b-5ea7f5c90b2a" width="300" alt="App screenshot 1" />
+  <img src="https://github.com/user-attachments/assets/ce9af6b9-3a95-4d3a-9690-a78f66f8fe7e" width="300" alt="App screenshot 2" />
+</p>
 
 ---
 
