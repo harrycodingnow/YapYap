@@ -41,5 +41,5 @@ Yapyap is meant to fill that gap:
 ## 🔗 Download
 
 👉 [App Store Link](https://apps.apple.com/tw/app/yapyap-%E5%8D%B3%E6%99%82%E5%8C%BF%E5%90%8D%E7%A4%BE%E7%BE%A4-%E9%99%90%E5%AE%9A-5-%E5%85%AC%E9%87%8C/id6751183691?l=en-GB)
-
+👉 [Yapyap Official Account](https://www.threads.com/@yapyap.app)
 ---
